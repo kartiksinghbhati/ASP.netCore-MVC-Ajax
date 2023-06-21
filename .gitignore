@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/WebApplication-MVC-Ajax/.vs
+/WebApplication-MVC-Ajax/WebApplication-MVC-Ajax/bin/Debug/net6.0
+/WebApplication-MVC-Ajax/WebApplication-MVC-Ajax/obj
