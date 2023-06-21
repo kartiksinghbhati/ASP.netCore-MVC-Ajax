@@ -1,0 +1,161 @@
+﻿@using System.IO
+
+@model WebApplication_MVC_Ajax.Models.Employee
+
+<style>
+    .editButtons {
+        padding-top: 20px;
+    }
+</style>
+
+@*@{
+    string previousPhotoName = @Model.PhotoBase64;
+    string fileName = null;
+
+    if (!string.IsNullOrEmpty(previousPhotoName))
+    {
+        // Extract the file extension
+        string extension = previousPhotoName.Substring(previousPhotoName.IndexOf('/') + 1, previousPhotoName.IndexOf(';') - previousPhotoName.IndexOf('/') - 1);
+
+        // Generate a unique file name
+        string uniqueFileName = Guid.NewGuid().ToString("N") + "." + extension;
+
+        // Decode the base64 string and save the file
+        byte[] imageBytes = Convert.FromBase64String(previousPhotoName.Substring(previousPhotoName.IndexOf(',') + 1));
+        string filePath = Path.Combine(uploadDirectory, uniqueFileName);
+        File.WriteAllBytes(filePath, imageBytes);
+
+        // Set the file name
+        fileName = uniqueFileName;
+    }
+}*@
+
+<h2>Edit Employee</h2>
+
+<form id="editEmployeeForm" enctype="multipart/form-data">
+    <input type="hidden" name="Id" value="@Model.Id">
+
+    <div class="form-group">
+        <label for="FirstName">First Name:</label>
+        <input type="text" class="form-control" id="FirstName" name="FirstName" maxlength="50" value="@Model.FirstName" required>
+    </div>
+
+    <div class="form-group">
+        <label for="LastName">Last Name:</label>
+        <input type="text" class="form-control" id="LastName" name="LastName" maxlength="50" value="@Model.LastName" required>
+    </div>
+
+    <div class="form-group">
+        <label for="DateOfBirth">Date of Birth:</label>
+        <input type="date" class="form-control" id="DateOfBirth" name="DateOfBirth" value="@Model.DateOfBirth.ToString("yyyy-MM-dd")" required>
+    </div>
+
+    <div class="form-group">
+        <label for="Salary">Salary:</label>
+        <input type="number" class="form-control" id="Salary" name="Salary" value="@Model.Salary" required>
+    </div>
+
+@*    <div class="form-group">
+        <label>Previously Uploaded Photo:</label>
+        <div>
+            @if (!string.IsNullOrEmpty(fileName))
+            {
+                <p>Previous Photo: @fileName</p>
+            }
+        </div>
+    </div>*@
+
+    <div class="form-group">
+        <label for="PhotoBase64">Photo:</label>
+        <input type="file" class="form-control" id="PhotoBase64" name="updatedPhoto">
+    </div>
+
+    <div class="form-group">
+        <label>Gender:</label>
+        <div class="form-check">
+            <input type="radio" class="form-check-input" id="GenderMale" name="Gender" value="Male" @(Model.Gender == "Male" ? "checked" : "") required>
+            <label class="form-check-label" for="GenderMale">Male</label>
+        </div>
+        <div class="form-check">
+            <input type="radio" class="form-check-input" id="GenderFemale" name="Gender" value="Female" @(Model.Gender == "Female" ? "checked" : "") required>
+            <label class="form-check-label" for="GenderFemale">Female</label>
+        </div>
+        <div class="form-check">
+            <input type="radio" class="form-check-input" id="GenderOther" name="Gender" value="Other" @(Model.Gender == "Other" ? "checked" : "") required>
+            <label class="form-check-label" for="GenderOther">Other</label>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Hobbies:</label>
+
+        <label><input type="checkbox" name="Hobbies" value="Reading" @(Model.Hobbies != null && Model.Hobbies.Contains("Reading") ? "checked" : "") /> Reading</label>
+        <label><input type="checkbox" name="Hobbies" value="Sports" @(Model.Hobbies != null && Model.Hobbies.Contains("Sports") ? "checked" : "") /> Sports</label>
+        <label><input type="checkbox" name="Hobbies" value="Music" @(Model.Hobbies != null && Model.Hobbies.Contains("Music") ? "checked" : "") /> Music</label>
+        <label><input type="checkbox" name="Hobbies" value="Painting" @(Model.Hobbies != null && Model.Hobbies.Contains("Painting") ? "checked" : "") /> Painting</label>
+        <label><input type="checkbox" name="Hobbies" value="Dance" @(Model.Hobbies != null && Model.Hobbies.Contains("Dance") ? "checked" : "") /> Dance</label>
+        <label><input type="checkbox" name="Hobbies" value="Photography" @(Model.Hobbies != null && Model.Hobbies.Contains("Photography") ? "checked" : "") /> Photography</label>
+        <label><input type="checkbox" name="Hobbies" value="Gaming" @(Model.Hobbies != null && Model.Hobbies.Contains("Gaming") ? "checked" : "") /> Gaming</label>        
+    </div>
+
+    <div class="form-group">
+        <label for="IsActive">Active Status:</label>
+        <select class="form-control" id="IsActive" name="IsActive" required>
+            <option value="Active" selected="@(Model.IsActive == "Active")">Active</option>
+            <option value="Inactive" selected="@(Model.IsActive == "Inactive")">Inactive</option>
+        </select>
+    </div>
+
+    <div class="editButtons">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+           
+            $('#editEmployeeForm').submit(function (event) {
+                event.preventDefault();
+
+                var formData = new FormData(this);
+                //var formData = $(this).serialize();  // By default, when serializing a form using $(this).serialize(), it does not include file inputs.
+
+                $.ajax({
+                    url: '@Url.Action("Edit")',
+                    type: 'POST',
+                    data: formData,
+                    processData: false, // Prevent jQuery from processing the data
+                    contentType: false, // Prevent jQuery from setting content type
+                    success: function (result) {
+                        if (result.success) {
+                            //alert(result.message);
+                            window.location.href = '@Url.Action("Index")';
+                        } else {
+                            alert(result.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('An error occurred while updating the employee: ' + error);
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+
+@*<div class="form-check">
+            <input type="checkbox" class="form-check-input" id="Hobby1" name="Hobbies[]" value="Hobby1" @(Model.Hobbies.Contains("Hobby1") ? "checked" : "")>
+            <label class="form-check-label" for="Hobby1">Hobby 1</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="Hobby2" name="Hobbies[]" value="Hobby2" @(Model.Hobbies.Contains("Hobby2") ? "checked" : "")>
+            <label class="form-check-label" for="Hobby2">Hobby 2</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="Hobby3" name="Hobbies[]" value="Hobby3" @(Model.Hobbies.Contains("Hobby3") ? "checked" : "")>
+            <label class="form-check-label" for="Hobby3">Hobby 3</label>
+        </div>*@
+

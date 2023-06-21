@@ -1,0 +1,117 @@
+﻿@model WebApplication_MVC_Ajax.Models.Employee
+
+<style>
+    .createButtons {
+        padding-top: 20px;
+        
+    }
+</style>
+
+<h2>Add New Employee</h2>
+
+<form id="createEmployeeForm" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="FirstName">First Name:</label>
+        <input type="text" class="form-control" id="FirstName" name="FirstName">
+    </div>
+
+    <div class="form-group">
+        <label for="LastName">Last Name:</label>
+        <input type="text" class="form-control" id="LastName" name="LastName">
+    </div>
+
+    <div class="form-group">
+        <label for="DateOfBirth">Date of Birth:</label>
+        <input type="date" class="form-control" id="DateOfBirth" name="DateOfBirth">
+    </div>
+
+    <div class="form-group">
+        <label for="Salary">Salary:</label>
+        <input type="number" class="form-control" id="Salary" name="Salary">
+    </div>
+
+    <div class="form-group">
+        <label for="PhotoBase64">Photo:</label>
+        <input type="file" class="form-control" id="PhotoBase64" name="photo">
+    </div>
+
+    <div class="form-group">
+        <label>Gender:</label>
+        <div class="form-check">
+            <input type="radio" class="form-check-input" id="GenderMale" name="Gender" value="Male" checked>
+            <label class="form-check-label" for="GenderMale">Male</label>
+        </div>
+        <div class="form-check">
+            <input type="radio" class="form-check-input" id="GenderFemale" name="Gender" value="Female">
+            <label class="form-check-label" for="GenderFemale">Female</label>
+        </div>
+        <div class="form-check">
+            <input type="radio" class="form-check-input" id="GenderOther" name="Gender" value="Other" >
+            <label class="form-check-label" for="GenderOther">Other</label>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Hobbies:</label>
+
+        <label><input type="checkbox" name="Hobbies" value="Reading" /> Reading</label>
+        <label><input type="checkbox" name="Hobbies" value="Sports" /> Sports</label>
+        <label><input type="checkbox" name="Hobbies" value="Music" /> Music</label>
+        <label><input type="checkbox" name="Hobbies" value="Painting" /> Painting</label>
+        <label><input type="checkbox" name="Hobbies" value="Dance" /> Dance</label>
+        <label><input type="checkbox" name="Hobbies" value="Photography" /> Photography</label>
+        <label><input type="checkbox" name="Hobbies" value="Gaming" /> Gaming</label>
+    </div>
+
+
+    <div class="form-group">
+        <label for="IsActive">Active Status:</label>
+        <select class="form-control" id="IsActive" name="IsActive">
+            <option value="Active">Active</option>
+            <option value="Inactive" selected>Inactive</option>
+        </select>
+    </div>
+
+    <div class="createButtons">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#createEmployeeForm').submit(function (event) {
+                event.preventDefault();
+
+                var formData = new FormData(this);
+                //var formData = $(this).serialize();  // By default, when serializing a form using $(this).serialize(), it does not include file inputs.
+
+                $.ajax({
+                    url: '@Url.Action("Create")',
+                    type: 'POST',
+                    data: formData,
+                    processData: false, // Prevent jQuery from processing the data
+                    contentType: false, // Prevent jQuery from setting content type
+                    success: function (result) {
+
+                        if (result.success) {
+                            //alert(result.message);
+                            window.location.href = '@Url.Action("Index")';
+                        } else {
+                            alert(result.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('An error occurred while adding the employee: ' + error);
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+
+
+
+
