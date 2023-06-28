@@ -8,31 +8,9 @@
     }
 </style>
 
-@*@{
-    string previousPhotoName = @Model.PhotoBase64;
-    string fileName = null;
-
-    if (!string.IsNullOrEmpty(previousPhotoName))
-    {
-        // Extract the file extension
-        string extension = previousPhotoName.Substring(previousPhotoName.IndexOf('/') + 1, previousPhotoName.IndexOf(';') - previousPhotoName.IndexOf('/') - 1);
-
-        // Generate a unique file name
-        string uniqueFileName = Guid.NewGuid().ToString("N") + "." + extension;
-
-        // Decode the base64 string and save the file
-        byte[] imageBytes = Convert.FromBase64String(previousPhotoName.Substring(previousPhotoName.IndexOf(',') + 1));
-        string filePath = Path.Combine(uploadDirectory, uniqueFileName);
-        File.WriteAllBytes(filePath, imageBytes);
-
-        // Set the file name
-        fileName = uniqueFileName;
-    }
-}*@
-
 <h2>Edit Employee</h2>
 
-<form id="editEmployeeForm" enctype="multipart/form-data">
+<div id="editEmployeeForm">
     <input type="hidden" name="Id" value="@Model.Id">
 
     <div class="form-group">
@@ -55,15 +33,11 @@
         <input type="number" class="form-control" id="Salary" name="Salary" value="@Model.Salary" required>
     </div>
 
-@*    <div class="form-group">
-        <label>Previously Uploaded Photo:</label>
-        <div>
-            @if (!string.IsNullOrEmpty(fileName))
-            {
-                <p>Previous Photo: @fileName</p>
-            }
-        </div>
-    </div>*@
+    <div class="form-group">
+        <label>Current Photo:</label>
+        <img id="previewPhoto" src="@Model.PhotoBase64" alt="No Current Photo" style="max-width: 300px; max-height: 300px;">
+    </div>
+
 
     <div class="form-group">
         <label for="PhotoBase64">Photo:</label>
@@ -95,7 +69,7 @@
         <label><input type="checkbox" name="Hobbies" value="Painting" @(Model.Hobbies != null && Model.Hobbies.Contains("Painting") ? "checked" : "") /> Painting</label>
         <label><input type="checkbox" name="Hobbies" value="Dance" @(Model.Hobbies != null && Model.Hobbies.Contains("Dance") ? "checked" : "") /> Dance</label>
         <label><input type="checkbox" name="Hobbies" value="Photography" @(Model.Hobbies != null && Model.Hobbies.Contains("Photography") ? "checked" : "") /> Photography</label>
-        <label><input type="checkbox" name="Hobbies" value="Gaming" @(Model.Hobbies != null && Model.Hobbies.Contains("Gaming") ? "checked" : "") /> Gaming</label>        
+        <label><input type="checkbox" name="Hobbies" value="Gaming" @(Model.Hobbies != null && Model.Hobbies.Contains("Gaming") ? "checked" : "") /> Gaming</label>
     </div>
 
     <div class="form-group">
@@ -107,55 +81,97 @@
     </div>
 
     <div class="editButtons">
-        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn btn-primary" id="updateButton">Update</button>
         <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
     </div>
-</form>
+</div>
 
 @section Scripts {
+
     <script>
         $(document).ready(function () {
-           
-            $('#editEmployeeForm').submit(function (event) {
-                event.preventDefault();
+            $('#updateButton').click(function () {
+                var existingPhoto = "@Model.PhotoBase64";
+                $('#previewPhoto').attr('src', existingPhoto);
 
-                var formData = new FormData(this);
-                //var formData = $(this).serialize();  // By default, when serializing a form using $(this).serialize(), it does not include file inputs.
+                var firstName = $('input[name="FirstName"]').val();
+                var lastName = $('input[name="LastName"]').val();
+                var dateOfBirth = $('input[name="DateOfBirth"]').val();
+                var salary = $('input[name="Salary"]').val();
+                var gender = $('input[name="Gender"]:checked').val();
+                var hobbies = $('input[name="Hobbies"]:checked').map(function () { return $(this).val(); }).get();
+                var isActive = $('select[name="IsActive"]').val();
 
-                $.ajax({
-                    url: '@Url.Action("Edit")',
-                    type: 'POST',
-                    data: formData,
-                    processData: false, // Prevent jQuery from processing the data
-                    contentType: false, // Prevent jQuery from setting content type
-                    success: function (result) {
-                        if (result.success) {
-                            //alert(result.message);
-                            window.location.href = '@Url.Action("Index")';
-                        } else {
-                            alert(result.message);
+                var fileInput = document.getElementById('PhotoBase64');
+                var updatedPhoto = null;
+
+                if (fileInput.files.length > 0 && fileInput.files[0].size > 0) {
+                    var reader = new FileReader();
+                    reader.onload = function () {
+                        updatedPhoto = reader.result;
+
+                        $('#previewPhoto').attr('src', updatedPhoto);
+
+                        var data = {
+                            FirstName: firstName,
+                            LastName: lastName,
+                            DateOfBirth: dateOfBirth,
+                            Salary: salary,
+                            PhotoBase64: updatedPhoto,
+                            Gender: gender,
+                            Hobbies: hobbies,
+                            IsActive: isActive
+                        };
+
+                        $.ajax({
+                            url: '@Url.Action("Edit")',
+                            type: 'POST',
+                            data: JSON.stringify(data),
+                            contentType: 'application/json',
+                            success: function (result) {
+                                if (result.success) {
+                                    window.location.href = '@Url.Action("Index")';
+                                } else {
+                                    alert(result.message);
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                alert('An error occurred while adding the employee: ' + error);
+                            }
+                        });
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+
+                    var data = {
+                        FirstName: firstName,
+                        LastName: lastName,
+                        DateOfBirth: dateOfBirth,
+                        Salary: salary,
+                        PhotoBase64: null,
+                        Gender: gender,
+                        Hobbies: hobbies,
+                        IsActive: isActive
+                    };
+
+                    $.ajax({
+                        url: '@Url.Action("Edit")',
+                        type: 'POST',
+                        data: JSON.stringify(data),
+                        contentType: 'application/json',
+                        success: function (result) {
+                            if (result.success) {
+                                window.location.href = '@Url.Action("Index")';
+                            } else {
+                                alert(result.message);
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            alert('An error occurred while adding the employee: ' + error);
                         }
-                    },
-                    error: function (xhr, status, error) {
-                        alert('An error occurred while updating the employee: ' + error);
-                    }
-                });
+                    });
+                }
             });
         });
     </script>
 }
-
-
-@*<div class="form-check">
-            <input type="checkbox" class="form-check-input" id="Hobby1" name="Hobbies[]" value="Hobby1" @(Model.Hobbies.Contains("Hobby1") ? "checked" : "")>
-            <label class="form-check-label" for="Hobby1">Hobby 1</label>
-        </div>
-        <div class="form-check">
-            <input type="checkbox" class="form-check-input" id="Hobby2" name="Hobbies[]" value="Hobby2" @(Model.Hobbies.Contains("Hobby2") ? "checked" : "")>
-            <label class="form-check-label" for="Hobby2">Hobby 2</label>
-        </div>
-        <div class="form-check">
-            <input type="checkbox" class="form-check-input" id="Hobby3" name="Hobbies[]" value="Hobby3" @(Model.Hobbies.Contains("Hobby3") ? "checked" : "")>
-            <label class="form-check-label" for="Hobby3">Hobby 3</label>
-        </div>*@
-

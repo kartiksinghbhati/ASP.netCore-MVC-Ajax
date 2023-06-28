@@ -14,9 +14,9 @@
         margin-right: 20px;
     }
 
-    .image {
+    /*.image {
         flex: 1;
-    }
+    }*/
 
     .image img {
         width: 300px;
@@ -92,7 +92,14 @@
     </div>
 
     <div class="image">
-        <img src="data:image;base64,@Model.PhotoBase64" alt="Employee Photo" />
+        @if (!string.IsNullOrEmpty(Model.PhotoBase64))
+        {
+            <img src="@Model.PhotoBase64" alt="Employee Photo" />
+        }
+        else
+        {
+            <span>No photo available</span>
+        }
     </div>
 </div>
 
